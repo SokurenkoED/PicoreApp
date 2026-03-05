@@ -1,0 +1,128 @@
+services:
+  caddy:
+    image: caddy:2.9-alpine
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    env_file:
+      - ../../.env
+    command: ["sh", "-c", "pnpm --filter @picoria/web build && pnpm --filter @picoria/web start"]
+    environment:
+      INTERNAL_API_BASE_URL: http://api:3001/api
+      NEXT_PUBLIC_API_BASE_URL: /api
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - ../../.env
+    command: ["sh", "-c", "pnpm --filter @picoria/db db:migrate && pnpm --filter @picoria/api start"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3001/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/worker/Dockerfile
+    env_file:
+      - ../../.env
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  bot:
+    build:
+      context: ../..
+      dockerfile: apps/bot/Dockerfile
+    env_file:
+      - ../../.env
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3003/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-picoria}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-picoria}
+      POSTGRES_DB: ${POSTGRES_DB:-picoria}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-picoria} -d ${POSTGRES_DB:-picoria}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-01-20T14-49-07Z
+    profiles: ["with-minio"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  pg_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+  minio_data:

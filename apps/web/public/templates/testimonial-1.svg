@@ -1,0 +1,10 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#EBF1FA"/>
+  <rect x="44" y="34" width="552" height="352" rx="28" fill="#FFFFFF"/>
+  <circle cx="160" cy="160" r="72" fill="#D8E2F0"/>
+  <rect x="114" y="218" width="92" height="78" rx="26" fill="#C5D3E7"/>
+  <rect x="262" y="118" width="250" height="18" rx="9" fill="#A1B3CA"/>
+  <rect x="262" y="152" width="204" height="14" rx="7" fill="#BAC8D9"/>
+  <rect x="262" y="180" width="236" height="14" rx="7" fill="#BAC8D9"/>
+  <text x="262" y="250" fill="#1F354D" font-size="28" font-family="Verdana, Geneva, sans-serif" font-weight="700">TEMPLATE REVIEW</text>
+</svg>

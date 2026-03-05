@@ -1,0 +1,298 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  guest
+  telegram
+  local
+  vk
+  yandex
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum Locale {
+  en
+  ru
+}
+
+enum AssetKind {
+  input
+  preview
+  output
+}
+
+enum JobStatus {
+  queued
+  processing
+  uploading_results
+  done
+  failed
+  canceled
+}
+
+enum PaymentProvider {
+  tbank
+}
+
+enum PaymentStatus {
+  created
+  pending
+  paid
+  failed
+  canceled
+}
+
+enum LedgerReason {
+  purchase
+  spend
+  refund
+  admin
+}
+
+model User {
+  id         String    @id @default(uuid()) @db.Uuid
+  type       UserType
+  role       UserRole  @default(user)
+  locale     Locale    @default(en)
+  email      String?   @unique
+  passwordHash String?
+  name       String?
+  telegramId BigInt?   @unique
+  vkId       String?   @unique
+  yandexId   String?   @unique
+  isBlocked  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  assets        Asset[]
+  jobs          Job[]
+  payments      Payment[]
+  creditsLedger CreditsLedger[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+model Style {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique
+  titleEn       String
+  titleRu       String
+  descriptionEn String
+  descriptionRu String
+  faqEn         Json
+  faqRu         Json
+  sampleImages  Json
+  promptTemplate Json
+  defaultParams Json
+  isPublished   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  jobs Job[]
+
+  @@map("styles")
+}
+
+model Asset {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  jobId      String?   @db.Uuid
+  kind       AssetKind
+  storageKey String
+  mime       String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("assets")
+}
+
+model Job {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  styleId      String    @db.Uuid
+  status       JobStatus @default(queued)
+  providerKey  String
+  params       Json
+  progress     Int?
+  errorCode    String?
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  startedAt    DateTime?
+  finishedAt   DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  style  Style  @relation(fields: [styleId], references: [id], onDelete: Restrict)
+  assets Asset[]
+
+  @@index([userId, createdAt])
+  @@map("jobs")
+}
+
+model Package {
+  id        String    @id @default(uuid()) @db.Uuid
+  title     String
+  priceRub  Int
+  credits   Int
+  isActive  Boolean   @default(true)
+  sort      Int       @default(100)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  payments Payment[]
+
+  @@map("packages")
+}
+
+model Payment {
+  id                String          @id @default(uuid()) @db.Uuid
+  userId            String          @db.Uuid
+  packageId         String?         @db.Uuid
+  provider          PaymentProvider
+  providerPaymentId String?         @unique
+  orderId           String          @unique
+  amountRub         Int
+  status            PaymentStatus   @default(created)
+  payload           Json?
+  createdAt         DateTime        @default(now())
+  paidAt            DateTime?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("payments")
+}
+
+model CreditsLedger {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  delta     Int
+  reason    LedgerReason
+  refId     String?
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reason, refId])
+  @@index([userId, createdAt])
+  @@map("creditsLedger")
+}
+
+model BlogArticle {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique
+  titleEn       String
+  titleRu       String
+  excerptEn     String
+  excerptRu     String
+  contentEn     Json
+  contentRu     Json
+  coverImageUrl String
+  coverAltEn    String?
+  coverAltRu    String?
+  tagsEn        Json
+  tagsRu        Json
+  authorName    String
+  readingMinutes Int     @default(5)
+  isPublished   Boolean  @default(true)
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isPublished, publishedAt])
+  @@map("blog_articles")
+}
+
+model GenerationModel {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  title       String
+  description String?
+  providerKey String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  presets    Preset[]
+  photoshoots Photoshoot[]
+
+  @@map("generation_models")
+}
+
+model Preset {
+  id             String   @id @default(uuid()) @db.Uuid
+  slug           String   @unique
+  titleEn        String
+  titleRu        String
+  descriptionEn  String
+  descriptionRu  String
+  promptTemplate Json
+  defaultParams  Json
+  coverAssetKey  String?
+  sampleAssetKeys Json
+  modelId        String?  @db.Uuid
+  isPublished    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  model       GenerationModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  photoshoots Photoshoot[]
+
+  @@index([modelId, updatedAt])
+  @@map("presets")
+}
+
+model Photoshoot {
+  id             String   @id @default(uuid()) @db.Uuid
+  slug           String   @unique
+  titleEn        String
+  titleRu        String
+  descriptionEn  String
+  descriptionRu  String
+  coverAssetKey  String?
+  galleryAssetKeys Json
+  presetId       String?  @db.Uuid
+  modelId        String?  @db.Uuid
+  isPublished    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  preset Preset? @relation(fields: [presetId], references: [id], onDelete: SetNull)
+  model  GenerationModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+
+  @@index([presetId, updatedAt])
+  @@index([modelId, updatedAt])
+  @@map("photoshoots")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("password_reset_tokens")
+}

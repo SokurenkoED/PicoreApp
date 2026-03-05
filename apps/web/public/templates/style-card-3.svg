@@ -1,0 +1,10 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1200" fill="#E7F1E8"/>
+  <rect x="74" y="74" width="752" height="1052" rx="44" fill="#FBFEFC"/>
+  <rect x="170" y="210" width="560" height="584" rx="42" fill="#D3E4D5"/>
+  <circle cx="450" cy="354" r="142" fill="#E6F0E3"/>
+  <rect x="246" y="516" width="408" height="238" rx="34" fill="#BFD4BF"/>
+  <rect x="218" y="870" width="464" height="22" rx="11" fill="#8AA08C" fill-opacity="0.74"/>
+  <rect x="258" y="908" width="384" height="18" rx="9" fill="#9DB6A0"/>
+  <text x="242" y="160" fill="#243A28" font-size="44" font-family="Verdana, Geneva, sans-serif" font-weight="700">MOCK PORTRAIT</text>
+</svg>

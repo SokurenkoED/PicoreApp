@@ -1,0 +1,11 @@
+<svg width="1400" height="900" viewBox="0 0 1400 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="900" fill="#F2F6FC"/>
+  <rect x="100" y="110" width="520" height="680" rx="40" fill="#E4EBF5"/>
+  <rect x="780" y="110" width="520" height="680" rx="40" fill="#E8E4D9"/>
+  <rect x="658" y="402" width="84" height="84" rx="42" fill="#153755"/>
+  <path d="M690 430L710 444L690 458" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="210" y="182" width="300" height="390" rx="36" fill="#C9D7EA"/>
+  <rect x="892" y="182" width="300" height="390" rx="36" fill="#CFBFA4"/>
+  <text x="268" y="702" fill="#304861" font-size="38" font-family="Verdana, Geneva, sans-serif" font-weight="700">INPUT</text>
+  <text x="958" y="702" fill="#4B3927" font-size="38" font-family="Verdana, Geneva, sans-serif" font-weight="700">RESULT</text>
+</svg>

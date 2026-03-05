@@ -1,0 +1,9 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1200" fill="#EEF3FA"/>
+  <rect x="74" y="74" width="752" height="1052" rx="44" fill="#FFFFFF"/>
+  <circle cx="450" cy="402" r="158" fill="#D8E3F2"/>
+  <rect x="266" y="530" width="368" height="364" rx="42" fill="#C8D6E8"/>
+  <rect x="198" y="932" width="504" height="24" rx="12" fill="#A3B4CA"/>
+  <rect x="248" y="972" width="404" height="18" rx="9" fill="#B4C3D7"/>
+  <text x="216" y="158" fill="#1F344B" font-size="44" font-family="Verdana, Geneva, sans-serif" font-weight="700">STYLE PREVIEW</text>
+</svg>

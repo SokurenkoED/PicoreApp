@@ -1,0 +1,16 @@
+:80 {
+  encode gzip zstd
+
+  @api path /api/*
+  handle @api {
+    reverse_proxy api:3001
+  }
+
+  handle_path /minio/* {
+    reverse_proxy minio:9001
+  }
+
+  handle {
+    reverse_proxy web:3000
+  }
+}

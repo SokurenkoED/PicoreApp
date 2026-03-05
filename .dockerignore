@@ -1,0 +1,11 @@
+node_modules
+.pnpm-store
+.git
+.gitignore
+.next
+dist
+coverage
+**/node_modules
+**/.next
+**/dist
+.env

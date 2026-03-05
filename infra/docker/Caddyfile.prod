@@ -1,0 +1,16 @@
+picoria.net {
+  encode gzip zstd
+
+  @api path /api/*
+  handle @api {
+    reverse_proxy api:3001
+  }
+
+  handle {
+    reverse_proxy web:3000
+  }
+}
+
+www.picoria.net, picoria.ru, www.picoria.ru {
+  redir https://picoria.net{uri} permanent
+}

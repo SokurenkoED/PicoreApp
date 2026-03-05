@@ -1,0 +1,10 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#E6F0E8"/>
+  <rect x="44" y="34" width="552" height="352" rx="28" fill="#FBFDFB"/>
+  <circle cx="160" cy="160" r="72" fill="#D0E2D2"/>
+  <rect x="114" y="218" width="92" height="78" rx="26" fill="#BBD2BE"/>
+  <rect x="262" y="118" width="250" height="18" rx="9" fill="#86A18B"/>
+  <rect x="262" y="152" width="204" height="14" rx="7" fill="#A8BFAE"/>
+  <rect x="262" y="180" width="236" height="14" rx="7" fill="#A8BFAE"/>
+  <text x="262" y="250" fill="#27402B" font-size="28" font-family="Verdana, Geneva, sans-serif" font-weight="700">MOCK CUSTOMER</text>
+</svg>

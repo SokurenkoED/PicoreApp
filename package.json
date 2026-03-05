@@ -1,0 +1,15 @@
+{
+  "name": "picoria-mvp",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter './apps/*' dev",
+    "db:migrate": "pnpm --filter @picoria/db db:migrate",
+    "db:seed": "pnpm --filter @picoria/db db:seed",
+    "lint": "pnpm --filter @picoria/db generate && pnpm -r lint",
+    "test": "pnpm --filter @picoria/db generate && pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

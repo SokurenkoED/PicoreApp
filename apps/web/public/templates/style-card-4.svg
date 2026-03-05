@@ -1,0 +1,10 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1200" fill="#EFE7F4"/>
+  <rect x="74" y="74" width="752" height="1052" rx="44" fill="#FBF9FD"/>
+  <rect x="172" y="214" width="556" height="580" rx="42" fill="#D7CFE4"/>
+  <circle cx="450" cy="356" r="138" fill="#E8E1F1"/>
+  <rect x="250" y="516" width="400" height="232" rx="34" fill="#C2B6D8"/>
+  <rect x="216" y="866" width="468" height="22" rx="11" fill="#8A7E9E" fill-opacity="0.72"/>
+  <rect x="258" y="904" width="384" height="18" rx="9" fill="#A697BC"/>
+  <text x="232" y="160" fill="#35294A" font-size="44" font-family="Verdana, Geneva, sans-serif" font-weight="700">SCENE TEMPLATE</text>
+</svg>
