@@ -33,6 +33,11 @@ export function PresetPhotoshootGrid({ lang, presets, photoshoots }: PresetPhoto
                 </div>
                 <p className="text-xs uppercase tracking-[0.12em] text-black/55">{preset.modelTitle ?? 'Model'}</p>
                 <h3 className="display mt-1 text-2xl font-bold">{preset.title}</h3>
+                {preset.categoryName ? (
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#0f4a5a]">
+                    {lang === 'ru' ? `Категория: ${preset.categoryName}` : `Category: ${preset.categoryName}`}
+                  </p>
+                ) : null}
                 <p className="mt-2 text-sm text-black/70">{preset.description}</p>
               </article>
             ))}

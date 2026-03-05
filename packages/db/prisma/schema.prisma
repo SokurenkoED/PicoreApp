@@ -237,6 +237,18 @@ model GenerationModel {
   @@map("generation_models")
 }
 
+model PresetCategory {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  presets Preset[]
+
+  @@map("preset_categories")
+}
+
 model Preset {
   id             String   @id @default(uuid()) @db.Uuid
   slug           String   @unique
@@ -249,14 +261,17 @@ model Preset {
   coverAssetKey  String?
   sampleAssetKeys Json
   modelId        String?  @db.Uuid
+  categoryId     String?  @db.Uuid
   isPublished    Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   model       GenerationModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  category    PresetCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   photoshoots Photoshoot[]
 
   @@index([modelId, updatedAt])
+  @@index([categoryId, updatedAt])
   @@map("presets")
 }
 

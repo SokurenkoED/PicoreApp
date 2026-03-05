@@ -288,6 +288,55 @@ export class AdminService {
     return prisma.generationModel.delete({ where: { id } });
   }
 
+  async adminListPresetCategories() {
+    return prisma.presetCategory.findMany({
+      include: {
+        _count: {
+          select: {
+            presets: true
+          }
+        }
+      },
+      orderBy: [{ name: 'asc' }, { createdAt: 'desc' }]
+    });
+  }
+
+  async adminCreatePresetCategory(input: { slug: string; name: string }) {
+    return prisma.presetCategory.create({
+      data: {
+        slug: input.slug,
+        name: input.name
+      }
+    });
+  }
+
+  async adminUpdatePresetCategory(
+    id: string,
+    input: Partial<{
+      slug: string;
+      name: string;
+    }>
+  ) {
+    const data: Prisma.PresetCategoryUpdateInput = {};
+
+    if (typeof input.slug === 'string') {
+      data.slug = input.slug;
+    }
+
+    if (typeof input.name === 'string') {
+      data.name = input.name;
+    }
+
+    return prisma.presetCategory.update({
+      where: { id },
+      data
+    });
+  }
+
+  async adminDeletePresetCategory(id: string) {
+    return prisma.presetCategory.delete({ where: { id } });
+  }
+
   async adminListPresets() {
     const items = await prisma.preset.findMany({
       include: {
@@ -296,6 +345,13 @@ export class AdminService {
             id: true,
             key: true,
             title: true
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            slug: true,
+            name: true
           }
         }
       },
@@ -322,6 +378,7 @@ export class AdminService {
     coverAssetKey?: string | null;
     sampleAssetKeys: Prisma.InputJsonValue;
     modelId?: string | null;
+    categoryId?: string | null;
     isPublished: boolean;
   }) {
     return prisma.preset.create({
@@ -336,6 +393,7 @@ export class AdminService {
         coverAssetKey: input.coverAssetKey ?? null,
         sampleAssetKeys: input.sampleAssetKeys,
         modelId: this.assertUuid(input.modelId, 'modelId'),
+        categoryId: this.assertUuid(input.categoryId, 'categoryId'),
         isPublished: input.isPublished
       } as Prisma.PresetUncheckedCreateInput
     });
@@ -354,6 +412,7 @@ export class AdminService {
       coverAssetKey: string | null;
       sampleAssetKeys: Prisma.InputJsonValue;
       modelId: string | null;
+      categoryId: string | null;
       isPublished: boolean;
     }>
   ) {
@@ -388,6 +447,9 @@ export class AdminService {
     }
     if (input.modelId !== undefined) {
       data.modelId = this.assertUuid(input.modelId, 'modelId');
+    }
+    if (input.categoryId !== undefined) {
+      data.categoryId = this.assertUuid(input.categoryId, 'categoryId');
     }
     if (typeof input.isPublished === 'boolean') {
       data.isPublished = input.isPublished;
@@ -586,6 +648,12 @@ export class AdminService {
             key: true,
             title: true
           }
+        },
+        category: {
+          select: {
+            slug: true,
+            name: true
+          }
         }
       },
       orderBy: { updatedAt: 'desc' }
@@ -599,6 +667,8 @@ export class AdminService {
         description: lang === 'ru' ? item.descriptionRu : item.descriptionEn,
         modelKey: item.model?.key ?? null,
         modelTitle: item.model?.title ?? null,
+        categorySlug: item.category?.slug ?? null,
+        categoryName: item.category?.name ?? null,
         coverImage: await this.presignObjectKey(item.coverAssetKey),
         sampleImages: await this.presignObjectKeys(item.sampleAssetKeys)
       }))

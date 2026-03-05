@@ -27,9 +27,6 @@ export class AuthService {
   private readonly telegramAuthMode =
     (process.env.TELEGRAM_AUTH_MODE as 'strict' | 'mock' | undefined) ?? 'mock';
   private readonly welcomeCredits = Number.parseInt(process.env.NEW_USER_CREDITS ?? '10', 10);
-  private readonly bootstrapAdminEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL ?? '')
-    .trim()
-    .toLowerCase();
 
   constructor(@Inject(CreditsService) private readonly creditsService: CreditsService) {}
 
@@ -223,16 +220,7 @@ export class AuthService {
     await this.creditsService.addLedgerEntry(userId, this.welcomeCredits, 'admin', 'welcome_credits');
   }
 
-  private async resolveRoleForNewUser(email?: string | null): Promise<'user' | 'admin'> {
-    if (email && this.bootstrapAdminEmail && email === this.bootstrapAdminEmail) {
-      return 'admin';
-    }
-
-    const adminsCount = await prisma.user.count({ where: { role: 'admin' } });
-    if (adminsCount === 0) {
-      return 'admin';
-    }
-
+  private resolveRoleForNewUser(): 'user' {
     return 'user';
   }
 
@@ -302,7 +290,7 @@ export class AuthService {
       : await prisma.user.create({
           data: {
             type: 'telegram',
-            role: await this.resolveRoleForNewUser(null),
+            role: this.resolveRoleForNewUser(),
             locale: 'ru',
             telegramId
           }
@@ -332,7 +320,7 @@ export class AuthService {
     }
 
     const passwordHash = await this.hashPassword(input.password);
-    const role = await this.resolveRoleForNewUser(email);
+    const role = this.resolveRoleForNewUser();
     const payload = {
       type: 'local' as const,
       role,
@@ -529,7 +517,7 @@ export class AuthService {
         : await prisma.user.create({
             data: {
               type: 'telegram',
-              role: await this.resolveRoleForNewUser(null),
+              role: this.resolveRoleForNewUser(),
               locale,
               name,
               telegramId
@@ -584,7 +572,7 @@ export class AuthService {
               provider === 'vk'
                 ? {
                     type: provider,
-                    role: await this.resolveRoleForNewUser(email),
+                    role: this.resolveRoleForNewUser(),
                     locale,
                     name,
                     email,
@@ -592,7 +580,7 @@ export class AuthService {
                   }
                 : {
                     type: provider,
-                    role: await this.resolveRoleForNewUser(email),
+                    role: this.resolveRoleForNewUser(),
                     locale,
                     name,
                     email,

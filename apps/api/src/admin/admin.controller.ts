@@ -48,6 +48,13 @@ const modelCreateSchema = z.object({
 
 const modelUpdateSchema = modelCreateSchema.partial();
 
+const presetCategoryCreateSchema = z.object({
+  slug: z.string().min(1),
+  name: z.string().min(1)
+});
+
+const presetCategoryUpdateSchema = presetCategoryCreateSchema.partial();
+
 const presetCreateSchema = z.object({
   slug: z.string().min(1),
   titleEn: z.string().min(1),
@@ -59,6 +66,7 @@ const presetCreateSchema = z.object({
   coverAssetKey: z.string().min(1).nullable().optional(),
   sampleAssetKeys: z.array(z.string().min(1)).default([]),
   modelId: z.string().uuid().nullable().optional(),
+  categoryId: z.string().uuid().nullable().optional(),
   isPublished: z.boolean().default(true)
 });
 
@@ -150,6 +158,28 @@ export class AdminController {
     return this.adminService.adminDeleteModel(id);
   }
 
+  @Get('/preset-categories')
+  async presetCategories() {
+    return this.adminService.adminListPresetCategories();
+  }
+
+  @Post('/preset-categories')
+  async createPresetCategory(@Body() body: unknown) {
+    const dto = parseOrThrow(presetCategoryCreateSchema, body);
+    return this.adminService.adminCreatePresetCategory(dto);
+  }
+
+  @Put('/preset-categories/:id')
+  async updatePresetCategory(@Param('id') id: string, @Body() body: unknown) {
+    const dto = parseOrThrow(presetCategoryUpdateSchema, body);
+    return this.adminService.adminUpdatePresetCategory(id, dto);
+  }
+
+  @Delete('/preset-categories/:id')
+  async deletePresetCategory(@Param('id') id: string) {
+    return this.adminService.adminDeletePresetCategory(id);
+  }
+
   @Get('/presets')
   async presets() {
     return this.adminService.adminListPresets();
@@ -169,6 +199,7 @@ export class AdminController {
       coverAssetKey: dto.coverAssetKey,
       sampleAssetKeys: dto.sampleAssetKeys as Prisma.InputJsonValue,
       modelId: dto.modelId,
+      categoryId: dto.categoryId,
       isPublished: dto.isPublished
     });
   }
@@ -187,6 +218,7 @@ export class AdminController {
       coverAssetKey: dto.coverAssetKey,
       sampleAssetKeys: dto.sampleAssetKeys as Prisma.InputJsonValue | undefined,
       modelId: dto.modelId,
+      categoryId: dto.categoryId,
       isPublished: dto.isPublished
     });
   }

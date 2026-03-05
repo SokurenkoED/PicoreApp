@@ -18,6 +18,8 @@ export interface PresetListItem {
   description: string;
   modelKey: string | null;
   modelTitle: string | null;
+  categorySlug: string | null;
+  categoryName: string | null;
   coverImage: string | null;
   sampleImages: string[];
 }

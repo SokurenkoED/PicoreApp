@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 type DashboardMetrics = {
@@ -64,6 +65,7 @@ type AdminPreset = {
   coverAssetKey: string | null;
   sampleAssetKeys: unknown;
   modelId: string | null;
+  categoryId: string | null;
   isPublished: boolean;
   updatedAt: string;
   model?: {
@@ -71,8 +73,24 @@ type AdminPreset = {
     key: string;
     title: string;
   } | null;
+  category?: {
+    id: string;
+    slug: string;
+    name: string;
+  } | null;
   sampleImages?: string[];
   coverImage?: string | null;
+};
+
+type AdminPresetCategory = {
+  id: string;
+  slug: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    presets: number;
+  };
 };
 
 type AdminPhotoshoot = {
@@ -166,6 +184,7 @@ type PresetForm = {
   coverAssetKey: string;
   sampleAssetKeys: string;
   modelId: string;
+  categoryId: string;
   isPublished: boolean;
 };
 
@@ -244,6 +263,7 @@ const initialPresetForm: PresetForm = {
   coverAssetKey: '',
   sampleAssetKeys: '',
   modelId: '',
+  categoryId: '',
   isPublished: true
 };
 
@@ -357,11 +377,192 @@ async function getImageSize(file: File): Promise<{ width: number; height: number
 }
 
 export default function AdminPage() {
+  const pathname = usePathname();
+  const isRu = pathname.startsWith('/ru');
+  const appHref = isRu ? '/ru/app' : '/app';
+
+  const copy = useMemo(
+    () =>
+      isRu
+        ? {
+            badge: 'RU Admin panel',
+            heroTitle: 'Полное управление платформой',
+            heroSubtitle:
+              'Редактирование пользователей, ролей, кредитов, моделей, стилей, пресетов, фотосессий и изображений.',
+            refreshLoading: 'Обновление...',
+            refreshData: 'Обновить данные',
+            sectionsTitle: 'Разделы админки',
+            sectionsHint: 'Сначала выберите нужный раздел, и откроется только соответствующий экран.',
+            quickActionsTitle: 'Быстрые действия',
+            createOrder: 'Создать заказ',
+            createPreset: 'Создать пресет',
+            createPhotoshoot: 'Создать фотосессию',
+            createBlogArticle: 'Создать блог-статью',
+            createStyle: 'Создать стиль',
+            createModel: 'Создать модель',
+            ordersTitle: 'Заказы (генерации)',
+            ordersHint:
+              'Для создания нового заказа используйте App-экран генерации. В этом разделе отображаются ключевые метрики по заказам.',
+            openAppAndCreateOrder: 'Открыть App и создать заказ',
+            refreshMetrics: 'Обновить метрики',
+            usersTitle: 'Пользователи: редактирование и кредиты',
+            modelsTitle: 'Модели: create / edit / delete',
+            stylesTitle: 'Стили: create / edit / delete',
+            blogTitle: 'Блог: create / edit / delete',
+            presetsTitle: 'Пресеты: create / edit / delete + upload',
+            photoshootsTitle: 'Фотосессии: create / edit / delete + upload',
+            tabOverview: 'Главная',
+            tabOrders: 'Заказы',
+            tabUsers: 'Пользователи',
+            tabModels: 'Модели',
+            tabStyles: 'Стили',
+            tabPresets: 'Пресеты',
+            tabPhotoshoots: 'Фотосессии',
+            tabBlog: 'Блог',
+            metricUsers: 'Пользователи',
+            metricAdmins: 'Админы',
+            metricJobsTotal: 'Заказы всего',
+            metricJobs24h: 'Заказы за 24ч',
+            metricCreditsIssued: 'Кредитов выдано',
+            metricCreditsSpent: 'Кредитов списано',
+            metricModels: 'Модели',
+            metricPresetsPhotoshoots: 'Пресеты / Фотосессии',
+            filesUploaded: 'Файлы загружены в хранилище',
+            userUpdated: 'Пользователь обновлен',
+            roleUpdated: 'Роль обновлена',
+            creditsDeltaRequired: 'Укажите delta кредитов (целое число, не 0)',
+            creditsAdjusted: 'Кредиты скорректированы',
+            confirmDeleteUser: 'Удалить пользователя? Это удалит его задания, платежи и ассеты.',
+            userDeleted: 'Пользователь удален',
+            modelUpdated: 'Модель обновлена',
+            modelCreated: 'Модель создана',
+            confirmDeleteModel: 'Удалить модель?',
+            modelDeleted: 'Модель удалена',
+            styleUpdated: 'Стиль обновлен',
+            styleCreated: 'Стиль создан',
+            confirmDeleteStyle: 'Удалить стиль?',
+            styleDeleted: 'Стиль удален',
+            presetUpdated: 'Пресет обновлен',
+            presetCreated: 'Пресет создан',
+            confirmDeletePreset: 'Удалить пресет?',
+            presetDeleted: 'Пресет удален',
+            photoshootUpdated: 'Фотосессия обновлена',
+            photoshootCreated: 'Фотосессия создана',
+            confirmDeletePhotoshoot: 'Удалить фотосессию?',
+            photoshootDeleted: 'Фотосессия удалена',
+            articleUpdated: 'Статья обновлена',
+            articleCreated: 'Статья создана',
+            confirmDeleteArticle: 'Удалить статью?',
+            articleDeleted: 'Статья удалена',
+            categoriesTitle: 'Категории пресетов',
+            categoriesHint: 'Добавляйте и удаляйте категории для пресетов.',
+            categorySlugPlaceholder: 'slug категории',
+            categoryNamePlaceholder: 'название категории',
+            createCategory: 'Создать категорию',
+            updateCategory: 'Обновить категорию',
+            categoryUpdated: 'Категория обновлена',
+            categoryCreated: 'Категория создана',
+            categoryDeleted: 'Категория удалена',
+            confirmDeleteCategory: 'Удалить категорию?',
+            categoryColumn: 'Категория',
+            categoriesCountColumn: 'Пресетов',
+            modelOptionalLabel: 'model (optional)',
+            categoryOptionalLabel: 'category (optional)'
+          }
+        : {
+            badge: 'Admin panel',
+            heroTitle: 'Full platform control',
+            heroSubtitle:
+              'Manage users, roles, credits, models, styles, presets, photoshoots, and media assets.',
+            refreshLoading: 'Refreshing...',
+            refreshData: 'Refresh data',
+            sectionsTitle: 'Admin sections',
+            sectionsHint: 'Select a section first and only the relevant workspace will be shown.',
+            quickActionsTitle: 'Quick actions',
+            createOrder: 'Create order',
+            createPreset: 'Create preset',
+            createPhotoshoot: 'Create photoshoot',
+            createBlogArticle: 'Create blog article',
+            createStyle: 'Create style',
+            createModel: 'Create model',
+            ordersTitle: 'Orders (generations)',
+            ordersHint:
+              'Use the App generation screen to create a new order. This section shows key order metrics.',
+            openAppAndCreateOrder: 'Open App and create order',
+            refreshMetrics: 'Refresh metrics',
+            usersTitle: 'Users: edit and credits',
+            modelsTitle: 'Models: create / edit / delete',
+            stylesTitle: 'Styles: create / edit / delete',
+            blogTitle: 'Blog: create / edit / delete',
+            presetsTitle: 'Presets: create / edit / delete + upload',
+            photoshootsTitle: 'Photoshoots: create / edit / delete + upload',
+            tabOverview: 'Overview',
+            tabOrders: 'Orders',
+            tabUsers: 'Users',
+            tabModels: 'Models',
+            tabStyles: 'Styles',
+            tabPresets: 'Presets',
+            tabPhotoshoots: 'Photoshoots',
+            tabBlog: 'Blog',
+            metricUsers: 'Users',
+            metricAdmins: 'Admins',
+            metricJobsTotal: 'Jobs Total',
+            metricJobs24h: 'Jobs 24h',
+            metricCreditsIssued: 'Credits Issued',
+            metricCreditsSpent: 'Credits Spent',
+            metricModels: 'Models',
+            metricPresetsPhotoshoots: 'Presets / Photoshoots',
+            filesUploaded: 'Files uploaded to storage',
+            userUpdated: 'User updated',
+            roleUpdated: 'Role updated',
+            creditsDeltaRequired: 'Specify credits delta (integer, not 0)',
+            creditsAdjusted: 'Credits adjusted',
+            confirmDeleteUser: 'Delete user? This will remove their jobs, payments, and assets.',
+            userDeleted: 'User deleted',
+            modelUpdated: 'Model updated',
+            modelCreated: 'Model created',
+            confirmDeleteModel: 'Delete model?',
+            modelDeleted: 'Model deleted',
+            styleUpdated: 'Style updated',
+            styleCreated: 'Style created',
+            confirmDeleteStyle: 'Delete style?',
+            styleDeleted: 'Style deleted',
+            presetUpdated: 'Preset updated',
+            presetCreated: 'Preset created',
+            confirmDeletePreset: 'Delete preset?',
+            presetDeleted: 'Preset deleted',
+            photoshootUpdated: 'Photoshoot updated',
+            photoshootCreated: 'Photoshoot created',
+            confirmDeletePhotoshoot: 'Delete photoshoot?',
+            photoshootDeleted: 'Photoshoot deleted',
+            articleUpdated: 'Article updated',
+            articleCreated: 'Article created',
+            confirmDeleteArticle: 'Delete article?',
+            articleDeleted: 'Article deleted',
+            categoriesTitle: 'Preset categories',
+            categoriesHint: 'Add and remove categories for presets.',
+            categorySlugPlaceholder: 'category slug',
+            categoryNamePlaceholder: 'category name',
+            createCategory: 'Create category',
+            updateCategory: 'Update category',
+            categoryUpdated: 'Category updated',
+            categoryCreated: 'Category created',
+            categoryDeleted: 'Category deleted',
+            confirmDeleteCategory: 'Delete category?',
+            categoryColumn: 'Category',
+            categoriesCountColumn: 'Presets',
+            modelOptionalLabel: 'model (optional)',
+            categoryOptionalLabel: 'category (optional)'
+          },
+    [isRu]
+  );
+
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [models, setModels] = useState<AdminModel[]>([]);
   const [styles, setStyles] = useState<AdminStyle[]>([]);
   const [presets, setPresets] = useState<AdminPreset[]>([]);
+  const [presetCategories, setPresetCategories] = useState<AdminPresetCategory[]>([]);
   const [photoshoots, setPhotoshoots] = useState<AdminPhotoshoot[]>([]);
   const [articles, setArticles] = useState<AdminArticle[]>([]);
 
@@ -383,6 +584,11 @@ export default function AdminPage() {
 
   const [editingPresetId, setEditingPresetId] = useState<string>('');
   const [presetForm, setPresetForm] = useState<PresetForm>(initialPresetForm);
+  const [editingPresetCategoryId, setEditingPresetCategoryId] = useState<string>('');
+  const [presetCategoryForm, setPresetCategoryForm] = useState<{ slug: string; name: string }>({
+    slug: '',
+    name: ''
+  });
 
   const [editingPhotoshootId, setEditingPhotoshootId] = useState<string>('');
   const [photoshootForm, setPhotoshootForm] = useState<PhotoshootForm>(initialPhotoshootForm);
@@ -400,6 +606,11 @@ export default function AdminPage() {
     [presets]
   );
 
+  const presetCategoryOptions = useMemo(
+    () => presetCategories.map((item) => ({ id: item.id, label: `${item.name} (${item.slug})` })),
+    [presetCategories]
+  );
+
   const resetAlerts = () => {
     setError('');
     setMessage('');
@@ -412,12 +623,22 @@ export default function AdminPage() {
     }
 
     try {
-      const [dashboard, usersResponse, modelsResponse, stylesResponse, presetsResponse, photoshootsResponse, articlesResponse] =
+      const [
+        dashboard,
+        usersResponse,
+        modelsResponse,
+        stylesResponse,
+        presetCategoriesResponse,
+        presetsResponse,
+        photoshootsResponse,
+        articlesResponse
+      ] =
         await Promise.all([
           requestJson<DashboardMetrics>('/api/admin/dashboard'),
           requestJson<AdminUser[]>('/api/admin/users'),
           requestJson<AdminModel[]>('/api/admin/models'),
           requestJson<AdminStyle[]>('/api/admin/styles'),
+          requestJson<AdminPresetCategory[]>('/api/admin/preset-categories'),
           requestJson<AdminPreset[]>('/api/admin/presets'),
           requestJson<AdminPhotoshoot[]>('/api/admin/photoshoots'),
           requestJson<AdminArticle[]>('/api/admin/blog/articles')
@@ -427,6 +648,7 @@ export default function AdminPage() {
       setUsers(usersResponse);
       setModels(modelsResponse);
       setStyles(stylesResponse);
+      setPresetCategories(presetCategoriesResponse);
       setPresets(presetsResponse);
       setPhotoshoots(photoshootsResponse);
       setArticles(articlesResponse);
@@ -499,7 +721,7 @@ export default function AdminPage() {
       for (const file of files) {
         keys.push(await uploadAdminFile(file));
       }
-      setMessage('Файлы загружены в хранилище');
+      setMessage(copy.filesUploaded);
       return keys;
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : String(requestError));
@@ -544,7 +766,7 @@ export default function AdminPage() {
         })
       });
       cancelEditUser();
-    }, 'Пользователь обновлен');
+    }, copy.userUpdated);
   };
 
   const updateRoleQuick = async (userId: string, role: 'user' | 'admin') => {
@@ -554,14 +776,14 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role })
       });
-    }, 'Роль обновлена');
+    }, copy.roleUpdated);
   };
 
   const adjustCredits = async (userId: string) => {
     const raw = creditsDeltaByUserId[userId] ?? '';
     const delta = Number.parseInt(raw, 10);
     if (!Number.isFinite(delta) || delta === 0) {
-      setError('Укажите delta кредитов (целое число, не 0)');
+      setError(copy.creditsDeltaRequired);
       return;
     }
 
@@ -572,11 +794,11 @@ export default function AdminPage() {
         body: JSON.stringify({ delta })
       });
       setCreditsDeltaByUserId((prev) => ({ ...prev, [userId]: '' }));
-    }, 'Кредиты скорректированы');
+    }, copy.creditsAdjusted);
   };
 
   const deleteUserRecord = async (userId: string) => {
-    if (!window.confirm('Удалить пользователя? Это удалит его задания, платежи и ассеты.')) {
+    if (!window.confirm(copy.confirmDeleteUser)) {
       return;
     }
 
@@ -587,7 +809,7 @@ export default function AdminPage() {
       if (editingUserId === userId) {
         cancelEditUser();
       }
-    }, 'Пользователь удален');
+    }, copy.userDeleted);
   };
 
   const startEditModel = (item: AdminModel) => {
@@ -622,11 +844,11 @@ export default function AdminPage() {
         });
       }
       resetModelEditor();
-    }, editingModelId ? 'Модель обновлена' : 'Модель создана');
+    }, editingModelId ? copy.modelUpdated : copy.modelCreated);
   };
 
   const deleteModel = async (id: string) => {
-    if (!window.confirm('Удалить модель?')) {
+    if (!window.confirm(copy.confirmDeleteModel)) {
       return;
     }
 
@@ -635,7 +857,7 @@ export default function AdminPage() {
       if (editingModelId === id) {
         resetModelEditor();
       }
-    }, 'Модель удалена');
+    }, copy.modelDeleted);
   };
 
   const startEditStyle = (item: AdminStyle) => {
@@ -691,11 +913,11 @@ export default function AdminPage() {
       }
 
       resetStyleEditor();
-    }, editingStyleId ? 'Стиль обновлен' : 'Стиль создан');
+    }, editingStyleId ? copy.styleUpdated : copy.styleCreated);
   };
 
   const deleteStyle = async (id: string) => {
-    if (!window.confirm('Удалить стиль?')) {
+    if (!window.confirm(copy.confirmDeleteStyle)) {
       return;
     }
 
@@ -704,7 +926,64 @@ export default function AdminPage() {
       if (editingStyleId === id) {
         resetStyleEditor();
       }
-    }, 'Стиль удален');
+    }, copy.styleDeleted);
+  };
+
+  const startEditPresetCategory = (item: AdminPresetCategory) => {
+    setEditingPresetCategoryId(item.id);
+    setPresetCategoryForm({
+      slug: item.slug,
+      name: item.name
+    });
+  };
+
+  const resetPresetCategoryEditor = () => {
+    setEditingPresetCategoryId('');
+    setPresetCategoryForm({
+      slug: '',
+      name: ''
+    });
+  };
+
+  const savePresetCategory = async () => {
+    await runAction(async () => {
+      const body = {
+        slug: presetCategoryForm.slug.trim(),
+        name: presetCategoryForm.name.trim()
+      };
+
+      if (editingPresetCategoryId) {
+        await requestJson(`/api/admin/preset-categories/${editingPresetCategoryId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } else {
+        await requestJson('/api/admin/preset-categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      }
+
+      resetPresetCategoryEditor();
+    }, editingPresetCategoryId ? copy.categoryUpdated : copy.categoryCreated);
+  };
+
+  const deletePresetCategory = async (id: string) => {
+    if (!window.confirm(copy.confirmDeleteCategory)) {
+      return;
+    }
+
+    await runAction(async () => {
+      await requestJson(`/api/admin/preset-categories/${id}`, { method: 'DELETE' });
+      if (editingPresetCategoryId === id) {
+        resetPresetCategoryEditor();
+      }
+      if (presetForm.categoryId === id) {
+        setPresetForm((prev) => ({ ...prev, categoryId: '' }));
+      }
+    }, copy.categoryDeleted);
   };
 
   const startEditPreset = (item: AdminPreset) => {
@@ -720,6 +999,7 @@ export default function AdminPage() {
       coverAssetKey: item.coverAssetKey ?? '',
       sampleAssetKeys: toStringArray(item.sampleAssetKeys).join('\n'),
       modelId: item.modelId ?? '',
+      categoryId: item.categoryId ?? '',
       isPublished: item.isPublished
     });
   };
@@ -742,6 +1022,7 @@ export default function AdminPage() {
         coverAssetKey: presetForm.coverAssetKey.trim() ? presetForm.coverAssetKey.trim() : null,
         sampleAssetKeys: linesToArray(presetForm.sampleAssetKeys),
         modelId: presetForm.modelId || null,
+        categoryId: presetForm.categoryId || null,
         isPublished: presetForm.isPublished
       };
 
@@ -760,11 +1041,11 @@ export default function AdminPage() {
       }
 
       resetPresetEditor();
-    }, editingPresetId ? 'Пресет обновлен' : 'Пресет создан');
+    }, editingPresetId ? copy.presetUpdated : copy.presetCreated);
   };
 
   const deletePreset = async (id: string) => {
-    if (!window.confirm('Удалить пресет?')) {
+    if (!window.confirm(copy.confirmDeletePreset)) {
       return;
     }
 
@@ -773,7 +1054,7 @@ export default function AdminPage() {
       if (editingPresetId === id) {
         resetPresetEditor();
       }
-    }, 'Пресет удален');
+    }, copy.presetDeleted);
   };
 
   const startEditPhotoshoot = (item: AdminPhotoshoot) => {
@@ -827,11 +1108,11 @@ export default function AdminPage() {
       }
 
       resetPhotoshootEditor();
-    }, editingPhotoshootId ? 'Фотосессия обновлена' : 'Фотосессия создана');
+    }, editingPhotoshootId ? copy.photoshootUpdated : copy.photoshootCreated);
   };
 
   const deletePhotoshoot = async (id: string) => {
-    if (!window.confirm('Удалить фотосессию?')) {
+    if (!window.confirm(copy.confirmDeletePhotoshoot)) {
       return;
     }
 
@@ -840,7 +1121,7 @@ export default function AdminPage() {
       if (editingPhotoshootId === id) {
         resetPhotoshootEditor();
       }
-    }, 'Фотосессия удалена');
+    }, copy.photoshootDeleted);
   };
 
   const startEditArticle = (item: AdminArticle) => {
@@ -914,11 +1195,11 @@ export default function AdminPage() {
       }
 
       resetArticleEditor();
-    }, editingArticleId ? 'Статья обновлена' : 'Статья создана');
+    }, editingArticleId ? copy.articleUpdated : copy.articleCreated);
   };
 
   const deleteArticle = async (id: string) => {
-    if (!window.confirm('Удалить статью?')) {
+    if (!window.confirm(copy.confirmDeleteArticle)) {
       return;
     }
 
@@ -927,7 +1208,7 @@ export default function AdminPage() {
       if (editingArticleId === id) {
         resetArticleEditor();
       }
-    }, 'Статья удалена');
+    }, copy.articleDeleted);
   };
 
   const uploadPresetCover = async (file: File | null) => {
@@ -989,14 +1270,14 @@ export default function AdminPage() {
   };
 
   const sectionTabs: Array<{ key: AdminSection; label: string }> = [
-    { key: 'overview', label: 'Главная' },
-    { key: 'orders', label: 'Заказы' },
-    { key: 'users', label: 'Пользователи' },
-    { key: 'models', label: 'Модели' },
-    { key: 'styles', label: 'Стили' },
-    { key: 'presets', label: 'Пресеты' },
-    { key: 'photoshoots', label: 'Фотосессии' },
-    { key: 'blog', label: 'Блог' }
+    { key: 'overview', label: copy.tabOverview },
+    { key: 'orders', label: copy.tabOrders },
+    { key: 'users', label: copy.tabUsers },
+    { key: 'models', label: copy.tabModels },
+    { key: 'styles', label: copy.tabStyles },
+    { key: 'presets', label: copy.tabPresets },
+    { key: 'photoshoots', label: copy.tabPhotoshoots },
+    { key: 'blog', label: copy.tabBlog }
   ];
 
   return (
@@ -1004,14 +1285,12 @@ export default function AdminPage() {
       <section className="card p-6 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <span className="eyebrow">Admin panel</span>
-            <h1 className="section-title mt-4">Полное управление платформой</h1>
-            <p className="section-subtitle mt-2">
-              Редактирование пользователей, ролей, кредитов, моделей, стилей, пресетов, фотосессий и изображений.
-            </p>
+            <span className="eyebrow">{copy.badge}</span>
+            <h1 className="section-title mt-4">{copy.heroTitle}</h1>
+            <p className="section-subtitle mt-2">{copy.heroSubtitle}</p>
           </div>
           <button className="btn-ghost" onClick={() => void loadAll()} disabled={loading || busy || uploading}>
-            {loading ? 'Обновление...' : 'Обновить данные'}
+            {loading ? copy.refreshLoading : copy.refreshData}
           </button>
         </div>
       </section>
@@ -1026,10 +1305,8 @@ export default function AdminPage() {
       ) : null}
 
       <section className="card p-5">
-        <h2 className="display text-2xl font-bold">Разделы админки</h2>
-        <p className="mt-2 text-sm text-black/70">
-          Сначала выберите нужный раздел, и откроется только соответствующий экран.
-        </p>
+        <h2 className="display text-2xl font-bold">{copy.sectionsTitle}</h2>
+        <p className="mt-2 text-sm text-black/70">{copy.sectionsHint}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {sectionTabs.map((tab) => (
             <button
@@ -1045,10 +1322,10 @@ export default function AdminPage() {
 
       {activeSection === 'overview' ? (
         <section className="card p-5">
-          <h2 className="display text-2xl font-bold">Быстрые действия</h2>
+          <h2 className="display text-2xl font-bold">{copy.quickActionsTitle}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <button className="btn-primary" onClick={() => setActiveSection('orders')}>
-              Создать заказ
+              {copy.createOrder}
             </button>
             <button
               className="btn-primary"
@@ -1057,7 +1334,7 @@ export default function AdminPage() {
                 setActiveSection('presets');
               }}
             >
-              Создать пресет
+              {copy.createPreset}
             </button>
             <button
               className="btn-primary"
@@ -1066,7 +1343,7 @@ export default function AdminPage() {
                 setActiveSection('photoshoots');
               }}
             >
-              Создать фотосессию
+              {copy.createPhotoshoot}
             </button>
             <button
               className="btn-primary"
@@ -1075,7 +1352,7 @@ export default function AdminPage() {
                 setActiveSection('blog');
               }}
             >
-              Создать блог-статью
+              {copy.createBlogArticle}
             </button>
             <button
               className="btn-ghost"
@@ -1084,7 +1361,7 @@ export default function AdminPage() {
                 setActiveSection('styles');
               }}
             >
-              Создать стиль
+              {copy.createStyle}
             </button>
             <button
               className="btn-ghost"
@@ -1093,7 +1370,7 @@ export default function AdminPage() {
                 setActiveSection('models');
               }}
             >
-              Создать модель
+              {copy.createModel}
             </button>
           </div>
         </section>
@@ -1101,29 +1378,27 @@ export default function AdminPage() {
 
       {(activeSection === 'overview' || activeSection === 'orders') ? (
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard title="Users" value={metrics?.usersTotal ?? 0} />
-        <MetricCard title="Admins" value={metrics?.adminsTotal ?? 0} />
-        <MetricCard title="Jobs Total" value={metrics?.jobsTotal ?? 0} />
-        <MetricCard title="Jobs 24h" value={metrics?.jobsLast24h ?? 0} />
-        <MetricCard title="Credits Issued" value={metrics?.creditsIssued ?? 0} />
-        <MetricCard title="Credits Spent" value={metrics?.creditsSpent ?? 0} />
-        <MetricCard title="Models" value={metrics?.modelsTotal ?? 0} />
-        <MetricCard title="Presets / Photoshoots" value={`${metrics?.presetsTotal ?? 0} / ${metrics?.photoshootsTotal ?? 0}`} />
+        <MetricCard title={copy.metricUsers} value={metrics?.usersTotal ?? 0} />
+        <MetricCard title={copy.metricAdmins} value={metrics?.adminsTotal ?? 0} />
+        <MetricCard title={copy.metricJobsTotal} value={metrics?.jobsTotal ?? 0} />
+        <MetricCard title={copy.metricJobs24h} value={metrics?.jobsLast24h ?? 0} />
+        <MetricCard title={copy.metricCreditsIssued} value={metrics?.creditsIssued ?? 0} />
+        <MetricCard title={copy.metricCreditsSpent} value={metrics?.creditsSpent ?? 0} />
+        <MetricCard title={copy.metricModels} value={metrics?.modelsTotal ?? 0} />
+        <MetricCard title={copy.metricPresetsPhotoshoots} value={`${metrics?.presetsTotal ?? 0} / ${metrics?.photoshootsTotal ?? 0}`} />
       </section>
       ) : null}
 
       {activeSection === 'orders' ? (
         <section className="card p-5">
-          <h2 className="display text-2xl font-bold">Заказы (генерации)</h2>
-          <p className="mt-2 text-sm text-black/70">
-            Для создания нового заказа используйте App-экран генерации. В этом разделе отображаются ключевые метрики по заказам.
-          </p>
+          <h2 className="display text-2xl font-bold">{copy.ordersTitle}</h2>
+          <p className="mt-2 text-sm text-black/70">{copy.ordersHint}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <a href="/app" className="btn-primary">
-              Открыть App и создать заказ
+            <a href={appHref} className="btn-primary">
+              {copy.openAppAndCreateOrder}
             </a>
             <button className="btn-ghost" onClick={() => void loadAll(false)} disabled={loading || busy || uploading}>
-              Обновить метрики
+              {copy.refreshMetrics}
             </button>
           </div>
         </section>
@@ -1131,7 +1406,7 @@ export default function AdminPage() {
 
       {activeSection === 'users' ? (
       <section className="card p-5">
-        <h2 className="display text-2xl font-bold">Пользователи: редактирование и кредиты</h2>
+        <h2 className="display text-2xl font-bold">{copy.usersTitle}</h2>
 
         {userForm ? (
           <div className="mt-4 rounded-2xl border p-4" style={{ borderColor: 'var(--line)' }}>
@@ -1298,7 +1573,7 @@ export default function AdminPage() {
 
       {activeSection === 'models' ? (
       <section className="card p-5">
-        <h2 className="display text-2xl font-bold">Модели: create / edit / delete</h2>
+        <h2 className="display text-2xl font-bold">{copy.modelsTitle}</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <input
             className="rounded-2xl border bg-white px-3 py-2"
@@ -1396,7 +1671,7 @@ export default function AdminPage() {
 
       {activeSection === 'styles' ? (
       <section className="card p-5">
-        <h2 className="display text-2xl font-bold">Стили: create / edit / delete</h2>
+        <h2 className="display text-2xl font-bold">{copy.stylesTitle}</h2>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <input className="rounded-2xl border bg-white px-3 py-2" style={{ borderColor: 'var(--line)' }} value={styleForm.slug} onChange={(event) => setStyleForm((prev) => ({ ...prev, slug: event.target.value }))} placeholder="slug" />
@@ -1466,7 +1741,7 @@ export default function AdminPage() {
 
       {activeSection === 'blog' ? (
       <section className="card p-5">
-        <h2 className="display text-2xl font-bold">Блог: create / edit / delete</h2>
+        <h2 className="display text-2xl font-bold">{copy.blogTitle}</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <input className="rounded-2xl border bg-white px-3 py-2" style={{ borderColor: 'var(--line)' }} value={articleForm.slug} onChange={(event) => setArticleForm((prev) => ({ ...prev, slug: event.target.value }))} placeholder="slug" />
           <label className="text-sm">
@@ -1542,13 +1817,88 @@ export default function AdminPage() {
 
       {activeSection === 'presets' ? (
       <section className="card p-5">
-        <h2 className="display text-2xl font-bold">Пресеты: create / edit / delete + upload</h2>
+        <h2 className="display text-2xl font-bold">{copy.presetsTitle}</h2>
+
+        <div className="mt-4 rounded-2xl border p-4" style={{ borderColor: 'var(--line)' }}>
+          <h3 className="text-lg font-semibold">{copy.categoriesTitle}</h3>
+          <p className="mt-1 text-sm text-black/70">{copy.categoriesHint}</p>
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <input
+              className="rounded-2xl border bg-white px-3 py-2"
+              style={{ borderColor: 'var(--line)' }}
+              value={presetCategoryForm.slug}
+              onChange={(event) => setPresetCategoryForm((prev) => ({ ...prev, slug: event.target.value }))}
+              placeholder={copy.categorySlugPlaceholder}
+            />
+            <input
+              className="rounded-2xl border bg-white px-3 py-2"
+              style={{ borderColor: 'var(--line)' }}
+              value={presetCategoryForm.name}
+              onChange={(event) => setPresetCategoryForm((prev) => ({ ...prev, name: event.target.value }))}
+              placeholder={copy.categoryNamePlaceholder}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button className="btn-primary" onClick={() => void savePresetCategory()} disabled={busy || uploading}>
+              {editingPresetCategoryId ? copy.updateCategory : copy.createCategory}
+            </button>
+            {editingPresetCategoryId ? (
+              <button className="btn-ghost" onClick={resetPresetCategoryEditor}>
+                Cancel
+              </button>
+            ) : null}
+          </div>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead style={{ backgroundColor: 'rgba(12, 41, 60, 0.08)' }}>
+                <tr>
+                  <th className="px-3 py-2 text-left">Slug / {copy.categoryColumn}</th>
+                  <th className="px-3 py-2 text-left">{copy.categoriesCountColumn}</th>
+                  <th className="px-3 py-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {presetCategories.map((item) => (
+                  <tr key={item.id} className="border-t" style={{ borderColor: 'var(--line)' }}>
+                    <td className="px-3 py-2">
+                      <b>{item.slug}</b>
+                      <div className="text-xs text-black/65">{item.name}</div>
+                    </td>
+                    <td className="px-3 py-2">{item._count?.presets ?? 0}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => startEditPresetCategory(item)}>
+                          Edit
+                        </button>
+                        <button
+                          className="btn-secondary px-3 py-1.5 text-xs"
+                          onClick={() => void deletePresetCategory(item.id)}
+                          disabled={busy || uploading}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <input className="rounded-2xl border bg-white px-3 py-2" style={{ borderColor: 'var(--line)' }} value={presetForm.slug} onChange={(event) => setPresetForm((prev) => ({ ...prev, slug: event.target.value }))} placeholder="slug" />
           <select className="rounded-2xl border bg-white px-3 py-2" style={{ borderColor: 'var(--line)' }} value={presetForm.modelId} onChange={(event) => setPresetForm((prev) => ({ ...prev, modelId: event.target.value }))}>
-            <option value="">model (optional)</option>
+            <option value="">{copy.modelOptionalLabel}</option>
             {modelOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select className="rounded-2xl border bg-white px-3 py-2" style={{ borderColor: 'var(--line)' }} value={presetForm.categoryId} onChange={(event) => setPresetForm((prev) => ({ ...prev, categoryId: event.target.value }))}>
+            <option value="">{copy.categoryOptionalLabel}</option>
+            {presetCategoryOptions.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
               </option>
@@ -1596,6 +1946,7 @@ export default function AdminPage() {
               <tr>
                 <th className="px-3 py-2 text-left">Slug / EN / RU</th>
                 <th className="px-3 py-2 text-left">Model</th>
+                <th className="px-3 py-2 text-left">{copy.categoryColumn}</th>
                 <th className="px-3 py-2 text-left">Published</th>
                 <th className="px-3 py-2 text-left">Updated</th>
                 <th className="px-3 py-2 text-left">Actions</th>
@@ -1610,6 +1961,7 @@ export default function AdminPage() {
                     <div className="text-xs text-black/65">{item.titleRu}</div>
                   </td>
                   <td className="px-3 py-2">{item.model?.title ?? '-'}</td>
+                  <td className="px-3 py-2">{item.category?.name ?? '-'}</td>
                   <td className="px-3 py-2">{item.isPublished ? 'Yes' : 'No'}</td>
                   <td className="px-3 py-2">{formatDate(item.updatedAt)}</td>
                   <td className="px-3 py-2">
@@ -1632,7 +1984,7 @@ export default function AdminPage() {
 
       {activeSection === 'photoshoots' ? (
       <section className="card p-5">
-        <h2 className="display text-2xl font-bold">Фотосессии: create / edit / delete + upload</h2>
+        <h2 className="display text-2xl font-bold">{copy.photoshootsTitle}</h2>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <input className="rounded-2xl border bg-white px-3 py-2" style={{ borderColor: 'var(--line)' }} value={photoshootForm.slug} onChange={(event) => setPhotoshootForm((prev) => ({ ...prev, slug: event.target.value }))} placeholder="slug" />

@@ -170,7 +170,7 @@ function MoreMenuPanel({
 export function SiteHeader() {
   const pathname = usePathname();
   const [openMenuSlug, setOpenMenuSlug] = useState<string | null>(null);
-  const { me, openAuth, logout } = useAuth();
+  const { me, openAuth } = useAuth();
 
   const isRu = pathname.startsWith('/ru');
   const localeKey = isRu ? 'ru' : 'en';
@@ -183,9 +183,10 @@ export function SiteHeader() {
   const ctaLabel = isRu ? 'Попробовать бесплатно' : 'Try for free';
   const featuredActionLabel = isRu ? 'Открыть подборку' : 'Open collection';
   const authLabel = isRu ? 'Войти' : 'Sign in';
-  const logoutLabel = isRu ? 'Выйти' : 'Log out';
-  const adminLabel = isRu ? 'Админка' : 'Admin';
+  const adminLabel = isRu ? 'RU Админ' : 'Admin';
+  const adminHref = isRu ? '/ru/admin' : '/admin';
   const accountLabel = isRu ? 'Аккаунт' : 'Account';
+  const appPanelLabel = isRu ? 'Личный кабинет' : 'Dashboard';
 
   const headerItems = useMemo<HeaderItem[]>(
     () => (isRu ? (ruHeaderItems as HeaderItem[]) : (enHeaderItems as HeaderItem[])),
@@ -215,6 +216,8 @@ export function SiteHeader() {
     me?.balance !== null && me?.balance !== undefined
       ? `${isRu ? 'Кредиты' : 'Credits'}: ${me.balance}`
       : null;
+  const compactBalanceText =
+    me?.balance !== null && me?.balance !== undefined ? `${isRu ? 'Кр.' : 'Cr.'} ${me.balance}` : null;
 
   useEffect(() => {
     setOpenMenuSlug(null);
@@ -304,28 +307,22 @@ export function SiteHeader() {
           <div className="hidden items-center gap-2 md:flex">
             {isAuthenticated ? (
               <>
-                <Link href={appHref} className="btn-cta px-5 py-2.5 text-[15px] xl:px-6 xl:py-3">
-                  {ctaLabel}
+                <Link href={appHref} className="btn-cta h-11 px-5 text-[15px] xl:px-6">
+                  {appPanelLabel}
                 </Link>
                 <Link
                   href={accountHref}
-                  className="rounded-full border px-3 py-2 text-xs font-semibold text-[#1f2b3b]"
+                  className="inline-flex h-11 items-center gap-2 rounded-full border px-4 text-xs font-semibold text-[#1f2b3b] xl:px-5"
                   style={{ borderColor: 'var(--line)', background: 'rgba(255,255,255,0.78)' }}
                 >
-                  <span>{userLabel}</span>
-                  {balanceText ? <span className="ml-2 text-black/70">{balanceText}</span> : null}
+                  <span className="max-w-[190px] truncate">{userLabel}</span>
+                  {balanceText ? <span className="text-black/70">{balanceText}</span> : null}
                 </Link>
                 {me?.role === 'admin' ? (
-                  <Link href="/admin" className="btn-ghost px-4 py-2.5 text-xs">
+                  <Link href={adminHref} className="btn-ghost px-4 py-2.5 text-xs">
                     {adminLabel}
                   </Link>
                 ) : null}
-                <button
-                  className="btn-ghost px-4 py-2.5 text-xs"
-                  onClick={() => void logout().catch(() => undefined)}
-                >
-                  {logoutLabel}
-                </button>
               </>
             ) : (
               <>
@@ -346,27 +343,22 @@ export function SiteHeader() {
           <div className="ml-auto flex items-center gap-2 md:hidden">
             {isAuthenticated ? (
               <>
-                <Link href={appHref} className="btn-cta px-4 py-2 text-sm">
-                  {ctaLabel}
+                <Link href={appHref} className="btn-cta h-9 px-4 text-sm">
+                  {appPanelLabel}
                 </Link>
                 <Link
                   href={accountHref}
-                  className="rounded-full border px-3 py-2 text-xs font-semibold text-[#1f2b3b]"
+                  className="inline-flex h-9 items-center gap-1 rounded-full border px-3 text-[11px] font-semibold text-[#1f2b3b]"
                   style={{ borderColor: 'var(--line)', background: 'rgba(255,255,255,0.78)' }}
                 >
-                  {accountLabel}
+                  <span className="max-w-[82px] truncate">{userLabel}</span>
+                  {compactBalanceText ? <span className="text-black/70">{compactBalanceText}</span> : null}
                 </Link>
                 {me?.role === 'admin' ? (
-                  <Link href="/admin" className="btn-ghost px-3 py-2 text-xs">
+                  <Link href={adminHref} className="btn-ghost px-3 py-2 text-xs">
                     {adminLabel}
                   </Link>
                 ) : null}
-                <button
-                  className="btn-ghost px-3 py-2 text-xs"
-                  onClick={() => void logout().catch(() => undefined)}
-                >
-                  {logoutLabel}
-                </button>
               </>
             ) : (
               <>
