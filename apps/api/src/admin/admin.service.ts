@@ -675,6 +675,48 @@ export class AdminService {
     );
   }
 
+  async getPublishedPresetBySlug(lang: 'en' | 'ru', slug: string) {
+    const item = await prisma.preset.findFirst({
+      where: {
+        slug,
+        isPublished: true
+      },
+      include: {
+        model: {
+          select: {
+            key: true,
+            title: true
+          }
+        },
+        category: {
+          select: {
+            slug: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    if (!item) {
+      return null;
+    }
+
+    return {
+      id: item.id,
+      slug: item.slug,
+      title: lang === 'ru' ? item.titleRu : item.titleEn,
+      description: lang === 'ru' ? item.descriptionRu : item.descriptionEn,
+      modelKey: item.model?.key ?? null,
+      modelTitle: item.model?.title ?? null,
+      categorySlug: item.category?.slug ?? null,
+      categoryName: item.category?.name ?? null,
+      promptTemplate: item.promptTemplate,
+      defaultParams: item.defaultParams,
+      coverImage: await this.presignObjectKey(item.coverAssetKey),
+      sampleImages: await this.presignObjectKeys(item.sampleAssetKeys)
+    };
+  }
+
   async listPublishedPhotoshoots(lang: 'en' | 'ru') {
     const items = await prisma.photoshoot.findMany({
       where: { isPublished: true },

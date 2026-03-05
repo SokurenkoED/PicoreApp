@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  NotFoundException,
   Get,
   Inject,
   Param,
@@ -293,6 +294,16 @@ export class CatalogController {
   async listPresets(@Query('lang') lang?: string) {
     const resolvedLang = parseOrThrow(langSchema, lang ?? 'en');
     return this.adminService.listPublishedPresets(resolvedLang);
+  }
+
+  @Get('/presets/:slug')
+  async presetBySlug(@Param('slug') slug: string, @Query('lang') lang?: string) {
+    const resolvedLang = parseOrThrow(langSchema, lang ?? 'en');
+    const preset = await this.adminService.getPublishedPresetBySlug(resolvedLang, slug);
+    if (!preset) {
+      throw new NotFoundException('Preset not found');
+    }
+    return preset;
   }
 
   @Get('/photoshoots')

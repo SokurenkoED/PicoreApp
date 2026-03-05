@@ -3,7 +3,9 @@ import { z } from 'zod';
 export const createJobDtoSchema = z.object({
   styleSlug: z.string().min(1),
   inputAssetIds: z.array(z.string().uuid()).min(1).max(20),
-  clientRequestId: z.string().min(1).max(128).optional()
+  clientRequestId: z.string().min(1).max(128).optional(),
+  presetSlug: z.string().min(1).max(200).optional(),
+  presetInputs: z.record(z.any()).optional()
 });
 
 export const presignUploadDtoSchema = z.object({

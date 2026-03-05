@@ -2,6 +2,7 @@ import type {
   BlogArticleDetail,
   BlogArticleListItem,
   PhotoshootListItem,
+  PresetDetail,
   PresetListItem,
   StyleDetail,
   StyleListItem
@@ -40,6 +41,19 @@ export async function fetchPresets(lang: 'en' | 'ru'): Promise<PresetListItem[]>
     return [];
   }
   return response.json() as Promise<PresetListItem[]>;
+}
+
+export async function fetchPresetDetail(
+  slug: string,
+  lang: 'en' | 'ru'
+): Promise<PresetDetail | null> {
+  const response = await fetch(`${INTERNAL_API_BASE_URL}/presets/${slug}?lang=${lang}`, {
+    cache: 'no-store'
+  });
+  if (!response.ok) {
+    return null;
+  }
+  return response.json() as Promise<PresetDetail>;
 }
 
 export async function fetchPhotoshoots(lang: 'en' | 'ru'): Promise<PhotoshootListItem[]> {

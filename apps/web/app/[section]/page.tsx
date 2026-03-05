@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AppEntryButton } from '@/components/app-entry-button';
 import { BlogSectionPage } from '@/components/blog-section-page';
-import { fetchBlogArticles } from '@/lib/api';
+import { ReadyLooksCatalog } from '@/components/ready-looks-catalog';
+import { fetchBlogArticles, fetchPresets } from '@/lib/api';
 import { enSections, getEnSectionBySlug } from '@/lib/en-sections';
 
 type SectionPageProps = {
@@ -47,6 +48,11 @@ export default async function EnSectionPage({ params }: SectionPageProps) {
   if (section.slug === 'blog') {
     const articles = await fetchBlogArticles('en');
     return <BlogSectionPage locale="en" section={section} featuredArticle={articles[0]} />;
+  }
+
+  if (section.slug === 'ready-looks') {
+    const presets = await fetchPresets('en');
+    return <ReadyLooksCatalog lang="en" presets={presets} />;
   }
 
   const primaryAction = section.slug === 'partnerships' ? 'Discuss partnership' : 'Try for free';

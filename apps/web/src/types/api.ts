@@ -24,6 +24,11 @@ export interface PresetListItem {
   sampleImages: string[];
 }
 
+export interface PresetDetail extends PresetListItem {
+  promptTemplate: unknown;
+  defaultParams: unknown;
+}
+
 export interface PhotoshootListItem {
   id: string;
   slug: string;

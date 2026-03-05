@@ -67,7 +67,9 @@ export class JobsService {
         params: {
           styleSlug: dto.styleSlug,
           inputAssetIds: dto.inputAssetIds,
-          clientRequestId: dto.clientRequestId ?? null
+          clientRequestId: dto.clientRequestId ?? null,
+          presetSlug: dto.presetSlug ?? null,
+          presetInputs: dto.presetInputs ?? null
         },
         progress: 0
       }

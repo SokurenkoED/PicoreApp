@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AppEntryButton } from '@/components/app-entry-button';
 import { BlogSectionPage } from '@/components/blog-section-page';
-import { fetchBlogArticles } from '@/lib/api';
+import { ReadyLooksCatalog } from '@/components/ready-looks-catalog';
+import { fetchBlogArticles, fetchPresets } from '@/lib/api';
 import { getRuSectionBySlug, ruSections } from '@/lib/ru-sections';
 
 type SectionPageProps = {
@@ -47,6 +48,11 @@ export default async function RuSectionPage({ params }: SectionPageProps) {
   if (section.slug === 'blog') {
     const articles = await fetchBlogArticles('ru');
     return <BlogSectionPage locale="ru" section={section} featuredArticle={articles[0]} />;
+  }
+
+  if (section.slug === 'gotovye-obrazy') {
+    const presets = await fetchPresets('ru');
+    return <ReadyLooksCatalog lang="ru" presets={presets} />;
   }
 
   const primaryAction = section.slug === 'sotrudnichestvo' ? 'Обсудить сотрудничество' : 'Попробовать бесплатно';

@@ -1,17 +1,21 @@
-import { fetchBlogArticles, fetchStyles } from '@/lib/api';
+import { fetchBlogArticles, fetchPresets, fetchStyles } from '@/lib/api';
 import { ruSectionPaths } from '@/lib/ru-sections';
 
 const baseUrl = process.env.APP_BASE_URL ?? 'http://localhost:8090';
 
 export async function GET() {
-  const styles = await fetchStyles('ru');
-  const articles = await fetchBlogArticles('ru');
+  const [styles, presets, articles] = await Promise.all([
+    fetchStyles('ru'),
+    fetchPresets('ru'),
+    fetchBlogArticles('ru')
+  ]);
 
   const urls = [
     `${baseUrl}/ru`,
     `${baseUrl}/ru/styles`,
     ...ruSectionPaths.map((path) => `${baseUrl}${path}`),
     ...styles.map((style) => `${baseUrl}/ru/style/${style.slug}`),
+    ...presets.map((preset) => `${baseUrl}/ru/preset/${preset.slug}`),
     ...articles.map((article) => `${baseUrl}/ru/blog/${article.slug}`)
   ];
 

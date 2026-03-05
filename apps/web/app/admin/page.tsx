@@ -179,7 +179,7 @@ type PresetForm = {
   titleRu: string;
   descriptionEn: string;
   descriptionRu: string;
-  promptTemplate: string;
+  promptText: string;
   defaultParams: string;
   coverAssetKey: string;
   sampleAssetKeys: string;
@@ -258,7 +258,7 @@ const initialPresetForm: PresetForm = {
   titleRu: 'Пресет RU',
   descriptionEn: 'Preset description EN',
   descriptionRu: 'Описание пресета RU',
-  promptTemplate: JSON.stringify({ system: 'Preset prompt' }, null, 2),
+  promptText: 'Portrait preset prompt',
   defaultParams: JSON.stringify({ ratio: '4:5' }, null, 2),
   coverAssetKey: '',
   sampleAssetKeys: '',
@@ -318,6 +318,37 @@ function jsonToText(value: unknown, fallback: unknown): string {
     return JSON.stringify(value ?? fallback, null, 2);
   } catch {
     return JSON.stringify(fallback, null, 2);
+  }
+}
+
+function promptTemplateToText(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (!value || typeof value !== 'object') {
+    return '';
+  }
+
+  const objectValue = value as {
+    prompt?: unknown;
+    system?: unknown;
+    text?: unknown;
+  };
+
+  if (typeof objectValue.prompt === 'string') {
+    return objectValue.prompt;
+  }
+  if (typeof objectValue.system === 'string') {
+    return objectValue.system;
+  }
+  if (typeof objectValue.text === 'string') {
+    return objectValue.text;
+  }
+
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return '';
   }
 }
 
@@ -467,7 +498,10 @@ export default function AdminPage() {
             categoryColumn: 'Категория',
             categoriesCountColumn: 'Пресетов',
             modelOptionalLabel: 'model (optional)',
-            categoryOptionalLabel: 'category (optional)'
+            categoryOptionalLabel: 'category (optional)',
+            presetPromptLabel: 'Промпт (единый для RU/EN)',
+            presetPromptPlaceholder: 'Опишите визуальный результат одним текстом',
+            presetDefaultsLabel: 'Дополнительные параметры (JSON)'
           }
         : {
             badge: 'Admin panel',
@@ -552,7 +586,10 @@ export default function AdminPage() {
             categoryColumn: 'Category',
             categoriesCountColumn: 'Presets',
             modelOptionalLabel: 'model (optional)',
-            categoryOptionalLabel: 'category (optional)'
+            categoryOptionalLabel: 'category (optional)',
+            presetPromptLabel: 'Prompt (shared for RU/EN)',
+            presetPromptPlaceholder: 'Describe target visual result in one prompt',
+            presetDefaultsLabel: 'Additional params (JSON)'
           },
     [isRu]
   );
@@ -994,7 +1031,7 @@ export default function AdminPage() {
       titleRu: item.titleRu,
       descriptionEn: item.descriptionEn,
       descriptionRu: item.descriptionRu,
-      promptTemplate: jsonToText(item.promptTemplate, {}),
+      promptText: promptTemplateToText(item.promptTemplate),
       defaultParams: jsonToText(item.defaultParams, {}),
       coverAssetKey: item.coverAssetKey ?? '',
       sampleAssetKeys: toStringArray(item.sampleAssetKeys).join('\n'),
@@ -1017,7 +1054,7 @@ export default function AdminPage() {
         titleRu: presetForm.titleRu,
         descriptionEn: presetForm.descriptionEn,
         descriptionRu: presetForm.descriptionRu,
-        promptTemplate: JSON.parse(presetForm.promptTemplate || '{}'),
+        promptTemplate: { prompt: presetForm.promptText.trim() },
         defaultParams: JSON.parse(presetForm.defaultParams || '{}'),
         coverAssetKey: presetForm.coverAssetKey.trim() ? presetForm.coverAssetKey.trim() : null,
         sampleAssetKeys: linesToArray(presetForm.sampleAssetKeys),
@@ -1908,8 +1945,28 @@ export default function AdminPage() {
           <input className="rounded-2xl border bg-white px-3 py-2" style={{ borderColor: 'var(--line)' }} value={presetForm.titleRu} onChange={(event) => setPresetForm((prev) => ({ ...prev, titleRu: event.target.value }))} placeholder="title RU" />
           <textarea className="rounded-2xl border bg-white px-3 py-2 md:col-span-2" style={{ borderColor: 'var(--line)' }} value={presetForm.descriptionEn} onChange={(event) => setPresetForm((prev) => ({ ...prev, descriptionEn: event.target.value }))} placeholder="description EN" rows={2} />
           <textarea className="rounded-2xl border bg-white px-3 py-2 md:col-span-2" style={{ borderColor: 'var(--line)' }} value={presetForm.descriptionRu} onChange={(event) => setPresetForm((prev) => ({ ...prev, descriptionRu: event.target.value }))} placeholder="description RU" rows={2} />
-          <textarea className="rounded-2xl border bg-white px-3 py-2 font-mono text-xs" style={{ borderColor: 'var(--line)' }} value={presetForm.promptTemplate} onChange={(event) => setPresetForm((prev) => ({ ...prev, promptTemplate: event.target.value }))} placeholder="promptTemplate JSON" rows={4} />
-          <textarea className="rounded-2xl border bg-white px-3 py-2 font-mono text-xs" style={{ borderColor: 'var(--line)' }} value={presetForm.defaultParams} onChange={(event) => setPresetForm((prev) => ({ ...prev, defaultParams: event.target.value }))} placeholder="defaultParams JSON" rows={4} />
+          <label className="md:col-span-2 text-sm">
+            <span className="mb-1 block font-semibold">{copy.presetPromptLabel}</span>
+            <textarea
+              className="w-full rounded-2xl border bg-white px-3 py-2 text-sm"
+              style={{ borderColor: 'var(--line)' }}
+              value={presetForm.promptText}
+              onChange={(event) => setPresetForm((prev) => ({ ...prev, promptText: event.target.value }))}
+              placeholder={copy.presetPromptPlaceholder}
+              rows={4}
+            />
+          </label>
+          <label className="text-sm md:col-span-2">
+            <span className="mb-1 block font-semibold">{copy.presetDefaultsLabel}</span>
+            <textarea
+              className="w-full rounded-2xl border bg-white px-3 py-2 font-mono text-xs"
+              style={{ borderColor: 'var(--line)' }}
+              value={presetForm.defaultParams}
+              onChange={(event) => setPresetForm((prev) => ({ ...prev, defaultParams: event.target.value }))}
+              placeholder="defaultParams JSON"
+              rows={4}
+            />
+          </label>
 
           <div className="md:col-span-2 rounded-2xl border p-3" style={{ borderColor: 'var(--line)' }}>
             <p className="mb-2 text-sm font-semibold">Upload cover</p>
